@@ -1,6 +1,7 @@
 import {configDotenv} from "dotenv";
 configDotenv()
 
+export const NODE_ENV_NAME = process.env.NODE_ENV_TEST
 export const PORT = process.env.PORT || 4000;
 export const MONGODB_URI =
     process.env.MONGODB_URI || "mongodb+srv://mariosalazar10utn:1001590650ANDmar10@cluster0.iftvxqz.mongodb.net/mariosalazar";

@@ -8,7 +8,7 @@ import path from 'path';
 import authRoutes from './routes/auth.routes.js';
 import Tasks from './routes/tasks.routes.js';
 import authgoogle from './routes/authgoogle.routes.js';
-import {FRONTEND_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, TOKEN_SECRET, URL_DOMAIN, TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET} from './config.js';
+import {FRONTEND_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, TOKEN_SECRET, URL_DOMAIN, NODE_ENV_NAME, TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET} from './config.js';
 import {swaggerSpec, swaggerUi} from './swaggerConfig.js';
 import {Strategy as GoogleStrategy} from 'passport-google-oauth20';
 import {Strategy as TwitterStrategy} from 'passport-twitter';
@@ -38,12 +38,14 @@ app.use(cors({
     origin: [FRONTEND_URL, "https://jf36d5k0-4000.use2.devtunnels.ms", "http://localhost:5173/", "https://blog-mario-salazar.netlify.app", "https://blog-mario-salazar-bq3gujeoi-mario-salazars-projects.vercel.app"],
 }));
 
+console.log(URL_DOMAIN);
+
 // Passport strategy setup
 //https://app-backend-aztra.vercel.app/auth/google/callback
 passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: '/auth/google/callback',
+    callbackURL: NODE_ENV_NAME == 'production' ? URL_DOMAIN + '/auth/twitter/callback' : '/auth/google/callback',
 }, async (accessToken, refreshToken, profile, done) => {
     return done(null, profile);
 }));
