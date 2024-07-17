@@ -8,7 +8,7 @@ import path from 'path';
 import authRoutes from './routes/auth.routes.js';
 import Tasks from './routes/tasks.routes.js';
 import authgoogle from './routes/authgoogle.routes.js';
-import {FRONTEND_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, TOKEN_SECRET, TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET} from './config.js';
+import {FRONTEND_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, TOKEN_SECRET, URL_DOMAIN, TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET} from './config.js';
 import {swaggerSpec, swaggerUi} from './swaggerConfig.js';
 import {Strategy as GoogleStrategy} from 'passport-google-oauth20';
 import {Strategy as TwitterStrategy} from 'passport-twitter';
@@ -39,6 +39,7 @@ app.use(cors({
 }));
 
 // Passport strategy setup
+//https://app-backend-aztra.vercel.app/auth/google/callback
 passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
@@ -49,10 +50,11 @@ passport.use(new GoogleStrategy({
 
 console.log(TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET);
 
+//https://app-backend-aztra.vercel.app/auth/twitter/callback
 passport.use(new TwitterStrategy({
     consumerKey: TWITTER_CLIENT_ID,
     consumerSecret: TWITTER_CLIENT_SECRET,
-    callbackURL: 'https://1gt9jcx5-4000.use2.devtunnels.ms/auth/twitter/callback',
+    callbackURL: URL_DOMAIN + '/auth/twitter/callback',
     includeEmail: true
 },
     async (token, tokenSecret, profile, done) => {
@@ -60,10 +62,11 @@ passport.use(new TwitterStrategy({
     }
 ));
 //https://1gt9jcx5-4000.use2.devtunnels.ms/auth/facebook/callback
+//https://app-backend-aztra.vercel.app/auth/facebook/callback
 passport.use(new FacebookStrategy({
     clientID: FACEBOOK_CLIENT_ID,
     clientSecret: FACEBOOK_CLIENT_SECRET,
-    callbackURL: 'https://1gt9jcx5-4000.use2.devtunnels.ms/auth/facebook/callback',
+    callbackURL: URL_DOMAIN + '/auth/facebook/callback',
     enableProof: true,
     includeEmail: true,
     profileFields: ['id', 'displayName', 'photos', 'email']

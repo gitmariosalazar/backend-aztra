@@ -6,6 +6,10 @@ export const MONGODB_URI =
     process.env.MONGODB_URI || "mongodb+srv://mariosalazar10utn:1001590650ANDmar10@cluster0.iftvxqz.mongodb.net/mariosalazar";
 export const TOKEN_SECRET = process.env.SECRET_KEY;
 
+export const URL_DOMAIN =
+    process.env.NODE_ENV_TEST === 'development'
+        ? process.env.URL_DOMAIN_LOCAL
+        : process.env.URL_DOMAIN_DEVEL;
 
 export const FRONTEND_URL =
     process.env.NODE_ENV_TEST === 'development'
