@@ -45,7 +45,7 @@ console.log(URL_DOMAIN);
 passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: NODE_ENV_NAME == 'production' ? URL_DOMAIN + '/auth/twitter/callback' : '/auth/google/callback',
+    callbackURL: NODE_ENV_NAME == 'production' ? URL_DOMAIN + '/auth/google/callback' : '/auth/google/callback',
 }, async (accessToken, refreshToken, profile, done) => {
     return done(null, profile);
 }));
