@@ -1,0 +1,130 @@
+import express from 'express';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import passport from 'passport';
+import cors from 'cors';
+import path from 'path';
+import authRoutes from './routes/auth.routes.js';
+import Tasks from './routes/tasks.routes.js';
+import authgoogle from './routes/authgoogle.routes.js';
+import {FRONTEND_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, TOKEN_SECRET, TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET} from './config.js';
+import {swaggerSpec, swaggerUi} from './swaggerConfig.js';
+import {Strategy as GoogleStrategy} from 'passport-google-oauth20';
+import {Strategy as TwitterStrategy} from 'passport-twitter';
+import {Strategy as FacebookStrategy} from 'passport-facebook';
+import authMiddleware from './middlewares/authMiddleware.js';
+import User from './models/user.model.js';
+import {findOrCreateUser} from './controllers/authController.js';
+
+const app = express();
+
+console.log(TOKEN_SECRET);
+// Middleware setup
+app.use(morgan('dev'));
+app.use(express.json());
+app.use(cookieParser());
+app.use(session({
+    secret: TOKEN_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {maxAge: 24 * 60 * 60 * 1000}, // 1 día
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(cors({
+    credentials: true,
+    origin: [FRONTEND_URL, "https://jf36d5k0-4000.use2.devtunnels.ms", "http://localhost:5173/", "https://blog-mario-salazar.netlify.app", "https://blog-mario-salazar-bq3gujeoi-mario-salazars-projects.vercel.app"],
+}));
+
+// Passport strategy setup
+passport.use(new GoogleStrategy({
+    clientID: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    callbackURL: '/auth/google/callback',
+}, async (accessToken, refreshToken, profile, done) => {
+    return done(null, profile);
+}));
+
+console.log(TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET);
+
+passport.use(new TwitterStrategy({
+    consumerKey: TWITTER_CLIENT_ID,
+    consumerSecret: TWITTER_CLIENT_SECRET,
+    callbackURL: 'https://1gt9jcx5-4000.use2.devtunnels.ms/auth/twitter/callback',
+    includeEmail: true
+},
+    async (token, tokenSecret, profile, done) => {
+        return done(null, profile);
+    }
+));
+//https://1gt9jcx5-4000.use2.devtunnels.ms/auth/facebook/callback
+passport.use(new FacebookStrategy({
+    clientID: FACEBOOK_CLIENT_ID,
+    clientSecret: FACEBOOK_CLIENT_SECRET,
+    callbackURL: 'https://1gt9jcx5-4000.use2.devtunnels.ms/auth/facebook/callback',
+    enableProof: true,
+    includeEmail: true,
+    profileFields: ['id', 'displayName', 'photos', 'email']
+},
+    function (accessToken, refreshToken, profile, done) {
+        return done(null, profile);
+
+    }
+));
+
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+    done(null, user);
+});
+
+// Static files and routes
+app.use(express.static(path.join(process.cwd(), 'public')));
+app.set('view engine', 'ejs');
+app.set('views', path.join(process.cwd(), 'views'));
+
+app.use('/api/auth', authRoutes);
+app.use('/api', Tasks);
+app.use('/auth', authgoogle);
+
+app.get('/', async (req, res) => {
+    const domain = `https://${req.get('host')}/api/docs`;
+    res.render('index', {domain: domain});
+});
+
+
+app.get('/profile', authMiddleware, (req, res) => {
+    res.json(req.user);
+});
+
+app.use('/api/docs', swaggerUi.serve, (req, res, next) => {
+    const domain = `https://${req.get('host')}`;
+    swaggerSpec.servers[0].url = domain;
+    swaggerUi.setup(swaggerSpec, {
+        customCssUrl: 'https://mariosalazar-styles-swagger-ui.vercel.app/css/swagger-ui.css'
+    })(req, res, next);
+});
+
+// Production setup
+if (process.env.NODE_ENV === 'production') {
+    (async () => {
+        const path = await import('path');
+        app.use(express.static('client/dist'));
+
+        app.get('*', (req, res) => {
+            res.sendFile(path.resolve('client', 'dist', 'index.html'));
+        });
+    })();
+}
+
+// Error handling
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
+});
+
+export default app;
